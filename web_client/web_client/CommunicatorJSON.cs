@@ -15,13 +15,13 @@ namespace web_client
 
 		public string GetRepresentation (RandomMover rm)
 		{
+			string rez = "";
+			using (System.IO.MemoryStream sw = new System.IO.MemoryStream()) {
 
-			System.IO.MemoryStream sw = new System.IO.MemoryStream();
+				dcjs.WriteObject (sw, rm);
 
-			dcjs.WriteObject (sw, rm);
-
-//			System.IO.StreamReader sr = new System.IO.StreamReader (sw);
-			string rez = System.Text.UTF8Encoding.UTF8.GetString (sw.ToArray ());
+				rez = System.Text.UTF8Encoding.UTF8.GetString (sw.ToArray ());
+			}
 			return rez;
 		}
 
