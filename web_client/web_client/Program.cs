@@ -4,15 +4,17 @@ using System.Net;
 
 namespace web_client
 {
-	class RandomMover
+	public struct Point{
+		public int x;
+		public int y;
+	}
+
+	public class RandomMover
 	{
 		const byte MAX_H = 99; //100 cols: 0 .. 99
 		const byte MAX_V = 99; //100 rows: 0 .. 99
 
-		public struct Point{
-			public int x;
-			public int y;
-		}
+		private int id = 0;
 
 		private Point pos;
 		private Random rand;
