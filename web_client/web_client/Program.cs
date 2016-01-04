@@ -1,6 +1,7 @@
 using System;
 using System.Net;
-
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
 
 namespace web_client
 {
@@ -8,15 +9,17 @@ namespace web_client
 		public int x;
 		public int y;
 	}
-
+	[DataContract]
 	public class RandomMover
 	{
 		const byte MAX_H = 99; //100 cols: 0 .. 99
 		const byte MAX_V = 99; //100 rows: 0 .. 99
 
-		private int id = 0;
+		[DataMember(Name="id")]
+		public int id { get; set;}
 
-		private Point pos;
+		[DataMember(Name="point")]
+		public Point pos { get; set;}
 		private Random rand;
 
 		public RandomMover(){
@@ -26,24 +29,25 @@ namespace web_client
 
 		//move to another point
 	   private void MoveOnePos(){
-
+			Point tempPoint = pos;
 			if (RandomizeTwo ()==0) { 		//moving vertically
 				if (RandomizeTwo ()==0) { 	//moving up
 					Console.Write ("Up \t");
-					pos.y = (pos.y + 1) % (MAX_V+1);
+					tempPoint.y = (pos.y + 1) % (MAX_V+1);
 				} else { 				//moving down
 					Console.Write ("Down\t");
-					pos.y = (pos.y==0)?MAX_V:(pos.y-1);
+					tempPoint.y = (pos.y==0)?MAX_V:(pos.y-1);
 				}
 			} else { 					//
 				if (RandomizeTwo ()==0) { 	//moving left
 					Console.Write ("Left\t");
-					pos.x = (pos.x == 0) ? MAX_H : (pos.x - 1);
+					tempPoint.x = (pos.x == 0) ? MAX_H : (pos.x - 1);
 				} else {				//moving right
 					Console.Write ("Right\t");
-					pos.x = (pos.x + 1) % (MAX_H+1);
+					tempPoint.x = (pos.x + 1) % (MAX_H+1);
 				}
 			}
+			pos = tempPoint;
 		}
 
 		private byte RandomizeTwo(){
