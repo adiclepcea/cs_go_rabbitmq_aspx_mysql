@@ -72,11 +72,14 @@ namespace web_client
 		public static void Main (string[] args)
 		{
 			RandomMover rm = new RandomMover ();
+			CommunicatorJSON cj = new CommunicatorJSON ();
 			Console.WriteLine (rm.ToString ());
+			Console.WriteLine(cj.GetRepresentation(rm));
 			for (int i=0; i<50; i++) {
 				System.Threading.Thread.Sleep (500);
 				rm.MoveOnePos ();
 				Console.WriteLine (rm.ToString ());
+				Console.WriteLine(cj.GetRepresentation(rm));
 			}
 		}
 	}
