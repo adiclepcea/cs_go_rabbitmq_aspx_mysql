@@ -9,7 +9,6 @@ namespace web_client
 		public int x;
 		public int y;
 	}
-
 	[DataContract]
 	public class RandomMover
 	{
