@@ -66,20 +66,44 @@ namespace web_client
 		}
 
 		public override string ToString(){
-			return "x="+pos.x+"; y="+pos.y;
+			return "id="+id+"; x="+pos.x+"; y="+pos.y;
+		}
+
+		private static bool IsInteger(string s)
+		{
+			ushort output;
+			return ushort.TryParse(s,out output);
 		}
 
 		public static void Main (string[] args)
 		{
 			RandomMover rm = new RandomMover ();
 			CommunicatorJSON cJson = new CommunicatorJSON ();
-			Console.WriteLine (rm.ToString ());
-			Console.WriteLine(cJson.GetRepresentation(rm));
+
+			string server = "localhost";
+			int port = 8080;
+
+			if (args.Length > 1) {
+				if (IsInteger (args [1])) {//we have only the port specified
+					port = System.Convert.ToUInt16 (args [1]);
+				} else {
+					server = args [1];
+				}
+				if (args.Length > 2) {
+					if(!IsInteger(args[2])){
+						Console.WriteLine ("Use me like this: %s [server] [port]",args[0]);
+					}
+				}
+			}
+
+			string httpLoc = "http://" + server + ":" + port;
+			
+			Console.WriteLine(cJson.SendRepresentation(ref rm,httpLoc));
 			for (int i=0; i<50; i++) {
 				System.Threading.Thread.Sleep (500);
 				rm.MoveOnePos ();
-				Console.WriteLine (rm.ToString ());
-				Console.WriteLine(cJson.GetRepresentation(rm));
+				//Console.WriteLine (rm.ToString ());
+				Console.WriteLine(cJson.SendRepresentation(ref rm,httpLoc));
 			}
 		}
 	}
