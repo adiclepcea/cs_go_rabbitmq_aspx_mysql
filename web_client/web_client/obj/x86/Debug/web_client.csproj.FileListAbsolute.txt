@@ -1,0 +1,5 @@
+D:\div\go\hp\cs_go_rabbitmq_aspx_mysql\web_client\web_client\bin\Debug\web_client.exe
+D:\div\go\hp\cs_go_rabbitmq_aspx_mysql\web_client\web_client\bin\Debug\web_client.pdb
+D:\div\go\hp\cs_go_rabbitmq_aspx_mysql\web_client\web_client\obj\x86\Debug\web_client.csprojResolveAssemblyReference.cache
+D:\div\go\hp\cs_go_rabbitmq_aspx_mysql\web_client\web_client\obj\x86\Debug\web_client.exe
+D:\div\go\hp\cs_go_rabbitmq_aspx_mysql\web_client\web_client\obj\x86\Debug\web_client.pdb
