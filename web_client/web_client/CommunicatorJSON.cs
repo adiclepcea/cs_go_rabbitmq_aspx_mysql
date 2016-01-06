@@ -47,15 +47,18 @@ namespace web_client
 					return null;
 				}
 
-				using (var sr = response.GetResponseStream()) {
-					object resp = dcjs.ReadObject (sr); 			//convert the response to object
+				using (var sr = response.GetResponseStream()) {                    
+					
 					try {
-						rmTemp = resp as RandomMover;			//this object should be a representation of RandomMover
+                        object resp = dcjs.ReadObject(sr); 			//convert the response to object
+                        rmTemp = resp as RandomMover;			//this object should be a representation of RandomMover
 						rm.id = rmTemp.id;
 						rm.pos = rmTemp.pos;
 					} catch (InvalidCastException ex) {
 						return null;
-					}
+					}catch(System.Runtime.Serialization.SerializationException){
+                        return null;
+                    }
 				}
 			}
 

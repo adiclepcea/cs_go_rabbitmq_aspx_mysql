@@ -16,7 +16,7 @@ namespace web_client
 		const byte MAX_V = 99; //100 rows: 0 .. 99
 
 		[DataMember(Name="id")]
-		public int id { get; set;}
+		public UInt64 id { get; set;}
 
 		[DataMember(Name="point")]
 		public Point pos { get; set;}
@@ -59,8 +59,8 @@ namespace web_client
 		private Point InitializePos(){
 			Point rez;
 
-			rez.x = rand.Next(MAX_H+1);
-			rez.y = rand.Next (MAX_V+1);
+            rez.x = rand.Next(MAX_H + 1);
+            rez.y = rand.Next(MAX_V + 1);
 
 			return rez;
 		}
@@ -78,6 +78,7 @@ namespace web_client
 		public static void Main (string[] args)
 		{
 			RandomMover rm = new RandomMover ();
+           
 			CommunicatorJSON cJson = new CommunicatorJSON ();
 
 			string server = "localhost";
@@ -99,7 +100,7 @@ namespace web_client
 			string httpLoc = "http://" + server + ":" + port;
 			
 			Console.WriteLine(cJson.SendRepresentation(ref rm,httpLoc));
-			for (int i=0; i<50; i++) {
+			for (int i=0; i<500; i++) {
 				System.Threading.Thread.Sleep (500);
 				rm.MoveOnePos ();
 				//Console.WriteLine (rm.ToString ());
