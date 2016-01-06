@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"sync/atomic"
+	"math/rand"
 
 	"github.com/streadway/amqp"
 )
@@ -49,7 +50,7 @@ func main() {
 	defer ch.Close()
 
 	fmt.Println("RabbitMQ channel opened")
-
+	
 	log.Fatal(http.ListenAndServe(":8080", myServ))
 
 }
@@ -68,6 +69,7 @@ func checkAgent(agent *AgentReq) {
 }
 
 func checkAgentPos(agent *AgentReq) {
+	rand.Seed(100)
 	arr, ok := <-AChan
 
 	if !ok {
@@ -84,23 +86,20 @@ func checkAgentPos(agent *AgentReq) {
 		arr[agent.P.X][agent.P.Y] = agent.Id
 		bEmptyFound = true
 	} else {
-		//perhaps using a rand to specify the location would be more efficient
-		//however, this one also works albeit you could get a lot of them on
-		//the first row
-		log.Printf("Agent %d moved from %d,%d to ", agent.Id, agent.P.X, agent.P.Y)
+		log.Printf("moved from %d,%d (%d) to ", agent.P.X, agent.P.Y,arr[agent.P.X][agent.P.Y])
 		bAgentFound = false
-		for i := 0; i < 100; i++ {
-			for j := 0; j < 100; j++ {
-				if arr[i][j] == 0 {
-					bEmptyFound = true
-					arr[i][j] = agent.Id
-					agent.P.X = i
-					agent.P.Y = j
-					break
-				} else if arr[i][j] == agent.Id {
-					arr[i][j] = 0
-					bAgentFound = true
-				}
+		for {
+			i := rand.Intn(100)
+			j := rand.Intn(100)
+			if arr[i][j] == 0 {
+				bEmptyFound = true
+				arr[i][j] = agent.Id
+				agent.P.X = i
+				agent.P.Y = j
+				break
+			} else if arr[i][j] == agent.Id {
+				arr[i][j] = 0
+				bAgentFound = true
 			}
 		}
 	}
@@ -120,7 +119,7 @@ func checkAgentPos(agent *AgentReq) {
 		}
 	}
 
-	log.Printf("%d,%d\r\n ", agent.P.X, agent.P.Y)
+	log.Printf("%d,%d(%d)\r\n ", agent.P.X, agent.P.Y,agent.Id)
 
 	A = arr
 
