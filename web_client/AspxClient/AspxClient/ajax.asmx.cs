@@ -6,6 +6,7 @@ using System.Web.Services;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using RabbitMQ.Client;
+using System.Threading;
 
 namespace AspxClient
 {
@@ -19,6 +20,8 @@ namespace AspxClient
     // [System.Web.Script.Services.ScriptService]
     public class WebService1 : System.Web.Services.WebService
     {
+        static Thread t = null;
+        object oLock = new object();
         public struct Point
         {
             public Point(int x, int y)
@@ -41,10 +44,34 @@ namespace AspxClient
 
         }
 
+        public void ConnectToRabbit()
+        {
+            ConnectionFactory cf = new ConnectionFactory();
+            cf.HostName = "localhost";
+            cf.UserName = "guest";
+            cf.Password = "guest";
+
+            IConnection conn = cf.CreateConnection();
+            IModel model = conn.CreateModel();
+        }
+
         
         [WebMethod]
         public void GetName()
         {
+
+            lock(oLock)
+            {
+                if (t == null)
+                {
+                    t = new Thread(() =>
+                    {
+
+                    });
+                    t.IsBackground = true;
+                    t.Start();
+                }
+            }
             DataContractJsonSerializer dcjs = new DataContractJsonSerializer(typeof(RemoteMover));
             RemoteMover mucu = new RemoteMover();
             mucu.id = 10;
