@@ -167,7 +167,7 @@ func checkAgentPos(agent *AgentReq) {
 
 	A = arr
 
-	AChan <- A
+	AChan <- A1
 }
 
 //http server function
