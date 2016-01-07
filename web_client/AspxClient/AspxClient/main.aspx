@@ -19,15 +19,16 @@
         $();
 
         function getData() {
-            
+            //alert("sending");
             $.ajax({
                 type: "POST",
-                url: "ajax.asmx/GetName",
+                url: "./ajax.asmx/GetName",
                 data: "",
-                dataType: "text",
+                dataType: "json",
                 success: function (data) {
-                    alert(data);
-                    console.log(data);
+                    
+                    alert(JSON.stringify(data));
+                    alert(data.pos.x);
                 }
 
             });

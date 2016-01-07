@@ -6,6 +6,7 @@ using System.Web.Services;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 using System.Threading;
 
 namespace AspxClient
@@ -50,9 +51,30 @@ namespace AspxClient
             cf.HostName = "localhost";
             cf.UserName = "guest";
             cf.Password = "guest";
-
-            IConnection conn = cf.CreateConnection();
-            IModel model = conn.CreateModel();
+            //connect to RabbitMQ
+            using (IConnection conn = cf.CreateConnection())
+            {
+                using (IModel channel = conn.CreateModel())
+                {
+                    channel.ExchangeDeclare(exchange: "miscari", type: "fanout", durable: true);
+                    var queueName = channel.QueueDeclare().QueueName;
+                    channel.QueueBind(queue: queueName ,
+                              exchange: "miscari",
+                              routingKey: "");
+                    var consumer = new EventingBasicConsumer(channel);
+                    consumer.Received += (model, ea) =>
+                    {
+                        var body = ea.Body;
+                        var message = System.Text.UTF8Encoding.UTF8.GetString(body);
+                        Console.WriteLine(" [x] Received {0}", message);
+                    };
+                    channel.BasicConsume(queue: queueName, noAck: true, consumer: consumer);
+                    //not nice, but ... it does wait
+                    while (true) {
+                        Thread.Sleep(50);
+                    }
+                }
+            }
         }
 
         
@@ -66,7 +88,7 @@ namespace AspxClient
                 {
                     t = new Thread(() =>
                     {
-
+                        ConnectToRabbit();
                     });
                     t.IsBackground = true;
                     t.Start();
