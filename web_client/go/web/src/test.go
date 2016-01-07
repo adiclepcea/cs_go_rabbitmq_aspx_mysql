@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"sync/atomic"
-	"math/rand"
 
 	"github.com/streadway/amqp"
 )
@@ -14,6 +14,7 @@ import (
 var A [100][100]uint32
 var agentIndex uint32 = 0
 var AChan chan [100][100]uint32
+var Ch *amqp.Channel
 
 type Point struct {
 	X int `json:"x"`
@@ -32,8 +33,39 @@ func failOnError(err error, msg string) {
 	}
 }
 
-func main() {
+func initRabbit(ch *amqp.Channel) (err error) {
+	err = ch.ExchangeDeclare(
+		"movements", //name
+		"fanout",    //type
+		true,        //durable
+		false,       //auto-deleted
+		false,       //internal
+		false,       //no-wait
+		nil,         //arguments
+	)
+	return err
+}
 
+func publishRabbit(content string, body []byte) {
+	err := Ch.Publish(
+		"movements",
+		"",    //default routing
+		false, //not mandatory
+		false, //not immediate - no rush
+		amqp.Publishing{
+			ContentType:     content,
+			ContentEncoding: "UTF-8",
+			Body:            body,
+		})
+
+	failOnError(err, "Failed to publish message")
+
+	//log.Printf("[x] Sent %s", string(body))
+}
+
+func main() {
+	//AChan will be the channel used for synchronizyng the access
+	//to A - the 100/100 grid
 	AChan = make(chan [100][100]uint32, 1)
 	AChan <- A
 	myServ := http.NewServeMux()
@@ -47,10 +79,13 @@ func main() {
 	fmt.Println("Connected to RabbitMQ")
 	ch, err := conn.Channel()
 	failOnError(err, "Failed to open a channel")
+	Ch = ch
 	defer ch.Close()
 
+	failOnError(initRabbit(ch), "Failed to declare an excange")
+
 	fmt.Println("RabbitMQ channel opened")
-	
+
 	log.Fatal(http.ListenAndServe(":8080", myServ))
 
 }
@@ -86,8 +121,17 @@ func checkAgentPos(agent *AgentReq) {
 		arr[agent.P.X][agent.P.Y] = agent.Id
 		bEmptyFound = true
 	} else {
-		log.Printf("moved from %d,%d (%d) to ", agent.P.X, agent.P.Y,arr[agent.P.X][agent.P.Y])
+		log.Printf("moved from %d,%d (%d) to ", agent.P.X, agent.P.Y, arr[agent.P.X][agent.P.Y])
 		bAgentFound = false
+		//since we do not delete unused indexes
+		//we can make a simple check to see if we still have empty places
+		index := atomic.LoadUint32(&agentIndex)
+		if index >= 100*100 {
+			agent.P.X = -1
+			agent.P.Y = -1
+			return
+		}
+		//if we have free places we search for them
 		for {
 			i := rand.Intn(100)
 			j := rand.Intn(100)
@@ -119,7 +163,7 @@ func checkAgentPos(agent *AgentReq) {
 		}
 	}
 
-	log.Printf("%d,%d(%d)\r\n ", agent.P.X, agent.P.Y,agent.Id)
+	log.Printf("%d,%d(%d)\r\n ", agent.P.X, agent.P.Y, agent.Id)
 
 	A = arr
 
@@ -140,7 +184,11 @@ func managerFunc(w http.ResponseWriter, req *http.Request) {
 
 	checkAgent(&agent)
 
-	if err := json.NewEncoder(w).Encode(agent); err != nil {
-		w.Write([]byte("Eroare"))
+	jsonMsg, err := json.Marshal(agent)
+	if err != nil {
+		w.Write([]byte("Error while processing your request!"))
+	} else {
+		w.Write(jsonMsg)                     //send the message to the http client
+		publishRabbit("text/plain", jsonMsg) //send the message to RabbitMQ
 	}
 }
