@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Web;
 using System.Web.Services;
@@ -22,6 +23,7 @@ namespace AspxClient
     public class WebService1 : System.Web.Services.WebService
     {
         static Thread t = null;
+        static ConcurrentDictionary<int,object> dictGrid = new ConcurrentDictionary<int, object>();
         object oLock = new object();
         public struct Point
         {
@@ -38,7 +40,7 @@ namespace AspxClient
         {
            
             [DataMember]
-            public Point pos { get; set; }
+            public Point point { get; set; }
 
             [DataMember]
             public int id { get; set; }
@@ -48,6 +50,7 @@ namespace AspxClient
         public void ConnectToRabbit()
         {
             ConnectionFactory cf = new ConnectionFactory();
+            DataContractJsonSerializer dcjs = new DataContractJsonSerializer(typeof(RemoteMover));
             cf.HostName = "localhost";
             cf.UserName = "guest";
             cf.Password = "guest";
@@ -66,7 +69,15 @@ namespace AspxClient
                     {
                         var body = ea.Body;
                         var message = System.Text.UTF8Encoding.UTF8.GetString(body);
-                        Console.WriteLine(" [x] Received {0}", message);
+
+                        RemoteMover rm = JsonToRemoteMover(message);
+
+                        if (rm != null)
+                        {
+                            WriteToDb(rm);
+                            dictGrid[rm.id] = rm;
+                        }
+                        
                     };
                     channel.BasicConsume(queue: queueName, noAck: true, consumer: consumer);
                     //not nice, but ... it does wait
@@ -74,6 +85,29 @@ namespace AspxClient
                         Thread.Sleep(50);
                     }
                 }
+            }
+        }
+
+        private void WriteToDb(RemoteMover rm)
+        {
+
+        }
+
+        public RemoteMover JsonToRemoteMover(string json)
+        {
+            try {
+                DataContractJsonSerializer jdcs = new DataContractJsonSerializer(typeof(RemoteMover));
+                System.IO.MemoryStream ms = new System.IO.MemoryStream(System.Text.UTF8Encoding.UTF8.GetBytes(json));
+                RemoteMover rm = (RemoteMover)jdcs.ReadObject(ms);
+                return rm;
+            }
+            catch (InvalidCastException )
+            {
+                return null;
+            }
+            catch (SerializationException)
+            {
+                return null;
             }
         }
 
@@ -95,21 +129,31 @@ namespace AspxClient
                 }
             }
             DataContractJsonSerializer dcjs = new DataContractJsonSerializer(typeof(RemoteMover));
-            RemoteMover mucu = new RemoteMover();
-            mucu.id = 10;
-            Point p = new Point();
-            p.x = 2;
 
-            mucu.pos = new Point(2, 10);
+            
             string rez = "";
             HttpContext.Current.Response.ContentType = "application/json";
 
             using (System.IO.MemoryStream sw = new System.IO.MemoryStream())
             {
 
-                dcjs.WriteObject(sw, mucu);
+                if (dictGrid.Count > 0)
+                {
+                    RemoteMover rmLast = (RemoteMover)dictGrid.Last().Value;
+                    sw.Write(System.Text.UTF8Encoding.UTF8.GetBytes("[\r\n"), 0, 3);
+                    foreach (RemoteMover rm in dictGrid.Values)
+                    {
 
-                rez = System.Text.UTF8Encoding.UTF8.GetString(sw.ToArray());
+                        dcjs.WriteObject(sw, rm);
+                        if (rmLast != rm)
+                        {
+                            sw.Write(System.Text.UTF8Encoding.UTF8.GetBytes(",\r\n"), 0, 3);
+                        }
+                    }
+                    sw.Write(System.Text.UTF8Encoding.UTF8.GetBytes("]\r\n"), 0, 3);
+
+                    rez = System.Text.UTF8Encoding.UTF8.GetString(sw.ToArray());
+                }
             }
             HttpContext.Current.Response.Write(rez);
             
