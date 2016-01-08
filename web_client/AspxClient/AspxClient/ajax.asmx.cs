@@ -21,11 +21,13 @@ namespace AspxClient
     [WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
     [System.ComponentModel.ToolboxItem(false)]
     // To allow this Web Service to be called from script, using ASP.NET AJAX, uncomment the following line. 
-    // [System.Web.Script.Services.ScriptService]
+    [System.Web.Script.Services.ScriptService]
     public class WebService1 : System.Web.Services.WebService
     {
         static Thread t = null;
         static ConcurrentDictionary<int,object> dictGrid = new ConcurrentDictionary<int, object>();
+        static string connString = "server=127.0.0.1;uid=user_timeline;pwd=UserPass123!;database=utimeline;";        
+
         object oLock = new object();
         public struct Point
         {
@@ -51,7 +53,8 @@ namespace AspxClient
 
         public WebService1():base()
         {
-            //I should put here the Connect to Rabbit function, but then I woud lose te oportunity to use the double-checked locking in GetReadings and show off :)
+            //I should put here the Connect to Rabbit function, but then I woud lose 
+            //the oportunity to use the double-checked locking in GetReadings and show off :)
         }
 
         //this function starts the first time the GetReadings function called
@@ -82,8 +85,7 @@ namespace AspxClient
 
                         if (rm != null)
                         {
-                            WriteToDb(rm);
-                            dictGrid[rm.id] = rm;
+                            WriteToDb(rm);                            
                         }
                         
                     };
@@ -98,6 +100,25 @@ namespace AspxClient
 
         private void WriteToDb(RemoteMover rm)
         {
+            using(MySqlConnection conn = new MySqlConnection(WebService1.connString))
+            {
+                try {
+                    conn.Open();
+
+                }
+                catch (Exception)
+                {
+                    return;
+                }
+                using (MySqlCommand mysqlComm = new MySqlCommand("insert into timeline(id_agent,x,y) values(@id_agent,@x,@y)", conn))
+                {
+                    mysqlComm.Parameters.AddWithValue("@id_agent", rm.id);
+                    mysqlComm.Parameters.AddWithValue("@x", rm.point.x);
+                    mysqlComm.Parameters.AddWithValue("@y", rm.point.y);
+                    mysqlComm.ExecuteNonQuery();
+                    dictGrid[rm.id] = rm;
+                }
+            }            
 
         }
 
