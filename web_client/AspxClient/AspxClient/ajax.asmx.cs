@@ -140,7 +140,12 @@ namespace AspxClient
             }
         }
 
-        
+        [WebMethod]
+        public string GetHistoryReadings(string data1,string data2)
+        {
+            return data1 + " - "+data2;
+        }
+
         [WebMethod]
         public void GetReadings()
         {

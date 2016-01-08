@@ -29,6 +29,7 @@
     </style>
     <!--I use this as plain HTML. I want to use plain AJAX for it-->
     <!--<form id="form1" runat="server">-->
+    
     <button onclick="startStopShowData()" id="btnData">Show live data</button>
     <button onclick="startStopShowHistory()" id="btnHistory">Show history</button> &nbsp;
     <input type="text" id="seccondsBefore" value=""/> Seconds before
@@ -64,7 +65,40 @@
             }
             var now = new Date().getTime();
             var nowMinusSecs = now - secsBefore * 1000;
-            alert(new Date(nowMinusSecs).toISOString());
+            var strDate1 = new Date(nowMinusSecs).toISOString();
+            nowMinusSecs = nowMinusSecs + 500;
+            var strDate2 = new Date(nowMinusSecs).toISOString();
+           
+            getHistoryData(strDate1, strDate2);
+
+        }
+
+        function getHistoryData(date1, date2) {
+            
+            
+            $.ajax({
+                type: "POST",
+                //contentType: "application/json; charset=utf-8",
+                url: "./ajax.asmx/GetHistoryReadings",
+                data: "data1="+date1+"&data2="+date2,
+                dataType: "text",
+                success: function (data) {
+                    alert(data);
+                    //ReceiveHistoryData(data);
+
+                },
+                complete: function () {
+                    alert("ok1");
+                },
+                error: function () {
+                    alert("error");
+                }
+
+            });
+        }
+
+        function ReceiveHistoryData(data) {
+            alert(data);
         }
 
         //show or stop showing the live data
