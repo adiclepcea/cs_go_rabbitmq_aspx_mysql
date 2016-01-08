@@ -27,6 +27,18 @@ namespace AspxClient
         static Thread t = null;
         static ConcurrentDictionary<int,object> dictGrid = new ConcurrentDictionary<int, object>();
         static string connString = "server=127.0.0.1;uid=user_timeline;pwd=UserPass123!;database=utimeline;";        
+        static string sqlLastInInterval = "select "+
+                                "t.timepoint, t.id_agent, t.x, t.y from timeline t "+
+                                "inner join("+
+                                "select "+
+                                "max(timepoint) as tpoint, "+
+                                "id_agent as agent "+
+                                "from "+
+                                "timeline where "+
+                                "timepoint "+ 
+                                "between @start_date and @end_date " + 
+	                            "group by id_agent ) t2 " +
+                                "on t.id_agent = t2.agent and t.timepoint = t2.tpoint";
 
         object oLock = new object();
         public struct Point
@@ -116,6 +128,7 @@ namespace AspxClient
                     mysqlComm.Parameters.AddWithValue("@x", rm.point.x);
                     mysqlComm.Parameters.AddWithValue("@y", rm.point.y);
                     mysqlComm.ExecuteNonQuery();
+                    //only show what was written
                     dictGrid[rm.id] = rm;
                 }
             }            
@@ -141,9 +154,59 @@ namespace AspxClient
         }
 
         [WebMethod]
-        public string GetHistoryReadings(string data1,string data2)
+        public void GetHistoryReadings(string data1,string data2)
         {
-            return data1 + " - "+data2;
+            HttpContext.Current.Response.ContentType = "application/json";
+
+            string rez = "";
+
+            using (MySqlConnection conn = new MySqlConnection(WebService1.connString))
+            {
+                try
+                {
+                    conn.Open();
+
+                }
+                catch (Exception)
+                {
+                    return;
+                }
+                System.Text.StringBuilder sb = new System.Text.StringBuilder("[");
+                // ajax will ask for data in an 499 interval but that does not mean that the 
+                //messages will arrive in the exact timeline and get written
+                using (MySqlCommand mysqlComm = new MySqlCommand(sqlLastInInterval, conn))
+                {                    
+                    mysqlComm.Parameters.AddWithValue("@start_date", data1);
+                    mysqlComm.Parameters.AddWithValue("@end_date", data2);
+                    using (MySqlDataReader dr = mysqlComm.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            //now we could create a RemoteMover and do the same as before
+                            //but lets do it otherwise. We will use a StringBuilder 
+                            //since it is faster than string concatenation. This is not a good solution for production as it is error prone,
+                            //but I will play if allowed
+                            sb.Append("{\"id\":");
+                            sb.Append(dr.GetInt64("id_agent").ToString());
+                            sb.Append(", \"point\":{\"x\":");
+                            sb.Append(dr.GetInt32("x").ToString());
+                            sb.Append(",\"y\":");
+                            sb.Append(dr.GetInt32("y").ToString());
+                            sb.Append("}}");
+                            sb.Append(","); 
+                        }
+                        if (sb.Length > 5)
+                        {
+                            sb.Remove(sb.Length - 1, 1);
+                        }
+                        sb.Append("]");
+                        rez = sb.ToString();
+                    }
+                }
+            }
+
+
+            HttpContext.Current.Response.Write(rez);
         }
 
         [WebMethod]

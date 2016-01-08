@@ -33,16 +33,20 @@
     <button onclick="startStopShowData()" id="btnData">Show live data</button>
     <button onclick="startStopShowHistory()" id="btnHistory">Show history</button> &nbsp;
     <input type="text" id="seccondsBefore" value=""/> Seconds before
+    <div id="msg1"></div>
+    <div id="msg"></div>
     <div id="content">
         Mucu vesel
     </div>
+   
         
     <!--</form>-->
     <script>
         var arrTemp = []; //this will know your location
         var showData = false;
+        var showHistoryData = false;
         $(function () {
-            var tbl = "<table id=\"tblMouvements\" cellpadding=0 cellspacing=0>";
+            var tbl = "<table id=\"tblMouvements\" cellpadding=0 cellspacing=0 witdh='130'>";
             for (var i = 0; i < 100; i++) {
                 tbl += "<tr>";
                 for (var j = 0; j < 100; j++) {
@@ -63,32 +67,47 @@
                 $("#seccondsBefore").focus();
                 return;
             }
-            var now = new Date().getTime();
-            var nowMinusSecs = now - secsBefore * 1000;
-            var strDate1 = new Date(nowMinusSecs).toISOString();
-            nowMinusSecs = nowMinusSecs + 500;
-            var strDate2 = new Date(nowMinusSecs).toISOString();
-           
-            getHistoryData(strDate1, strDate2);
+            if (showHistoryData) {
+                showHistoryData = false;
+                $("#btnData").show();
+                $("#btnHistory").text("Show history");
+            } else {
+                showHistoryData = true;
+                $("#btnData").hide();
+                $("#btnHistory").text("Stop showing history");
+                showHistory(secsBefore);
+            }
 
         }
 
-        function getHistoryData(date1, date2) {
-            
-            
+        function showHistory(secsBefore){
+            var d = new Date();
+            var now = d.getTime();
+            var nowMinusSecs = now - secsBefore * 1000 - d.getTimezoneOffset() * 60 * 1000;
+            var strDate1 = new Date(nowMinusSecs).toISOString();
+            nowMinusSecs = nowMinusSecs + 500;
+            var strDate2 = new Date(nowMinusSecs).toISOString();            
+            getHistoryData(strDate1, strDate2, secsBefore);
+        }
+
+        function getHistoryData(date1, date2, secsBefore) {
+            $("#msg1").text("period " + date1 + " to " + date2);
             $.ajax({
                 type: "POST",
-                //contentType: "application/json; charset=utf-8",
                 url: "./ajax.asmx/GetHistoryReadings",
                 data: "data1="+date1+"&data2="+date2,
                 dataType: "text",
                 success: function (data) {
-                    alert(data);
-                    //ReceiveHistoryData(data);
-
+                    //$("#msg").text(data);
+                    var obj = JSON.parse(data);
+                    
+                    displayData(obj);
+                    
                 },
                 complete: function () {
-                    alert("ok1");
+                    if (showHistoryData) {
+                        setTimeout(showHistory, 1000, secsBefore);
+                    }
                 },
                 error: function () {
                     alert("error");
@@ -97,9 +116,6 @@
             });
         }
 
-        function ReceiveHistoryData(data) {
-            alert(data);
-        }
 
         //show or stop showing the live data
         function startStopShowData() {
@@ -124,7 +140,7 @@
                 dataType: "json",
                 success: function (data) {
                     var arr = data;
-
+                    //alert(JSON.stringify(data));
                     displayData(arr);
                     
                 },
@@ -149,10 +165,12 @@
             //remove the old positions
             for (var i = 0; i < arr.length; i++) {
                 var obj = arr[i];
-                if (arrTemp[obj.id - 1] !== "") {
+                
+                if (arrTemp[obj.id - 1] !== "" && arrTemp[obj.id - 1]!==undefined) {
                     var location = arrTemp[obj.id - 1].split(",");
                     $("#s" + location[0] + "_" + location[1]).text("");
                 }
+                
             }
             //show the new ones
             for (var i = 0; i < arr.length; i++) {
