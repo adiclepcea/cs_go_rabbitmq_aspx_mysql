@@ -9,6 +9,8 @@ using System.Runtime.Serialization.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Threading;
+using System.Data;
+using MySql.Data.MySqlClient;
 
 namespace AspxClient
 {
@@ -47,6 +49,12 @@ namespace AspxClient
 
         }
 
+        public WebService1():base()
+        {
+            //I should put here the Connect to Rabbit function, but then I woud lose te oportunity to use the double-checked locking in GetReadings and show off :)
+        }
+
+        //this function starts the first time the GetReadings function called
         public void ConnectToRabbit()
         {
             ConnectionFactory cf = new ConnectionFactory();
@@ -113,21 +121,27 @@ namespace AspxClient
 
         
         [WebMethod]
-        public void GetName()
+        public void GetReadings()
         {
 
-            lock(oLock)
+            //we initialize the thread that will read from RabbitMQ
+            if (t == null)
             {
-                if (t == null)
+                lock (oLock)
                 {
-                    t = new Thread(() =>
+                    if (t == null)
                     {
+                        t = new Thread(() =>
+                        {
                         ConnectToRabbit();
-                    });
-                    t.IsBackground = true;
-                    t.Start();
+                        });
+                        t.IsBackground = true;
+                        t.Start();
+                    }
                 }
             }
+
+            //put the available data to json - java script will love it
             DataContractJsonSerializer dcjs = new DataContractJsonSerializer(typeof(RemoteMover));
 
             
