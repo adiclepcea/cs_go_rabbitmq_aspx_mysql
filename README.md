@@ -20,4 +20,8 @@ is not up.
 
 3. The AspxClient uses AJAX and WebMethods
 
+####More info
+1. The sql for database creation is in web_client/AspxClient/database creation.sql
+
+
 
