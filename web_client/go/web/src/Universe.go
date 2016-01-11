@@ -93,15 +93,7 @@ func main() {
 	log.Printf("Finished")
 }
 
-func confirmOne(confirms <-chan amqp.Confirmation) {
-	log.Printf("waiting for confirmation of one publishing")
 
-	if confirmed := <-confirms; confirmed.Ack {
-		log.Printf("confirmed delivery with delivery tag: %d", confirmed.DeliveryTag)
-	} else {
-		log.Printf("failed delivery of delivery tag: %d", confirmed.DeliveryTag)
-	}
-}
 
 func checkAgent(agent *AgentReq) {
 	//Todo - check for inactivity to remove the id's not used
