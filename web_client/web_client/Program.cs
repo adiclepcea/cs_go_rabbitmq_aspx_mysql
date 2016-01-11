@@ -31,30 +31,45 @@ namespace web_client
 		}
 
 		//move to another point
-	   public void MoveOnePos(){
+	   public void MoveOnePos(byte dir){
+            //0 = down
+            //2 = up
+            //1 = left
+            //3 = right
 			Point tempPoint = pos;
-			if (RandomizeTwo ()==0) { 		//moving vertically
-				if (RandomizeTwo ()==0) { 	//moving up
-					Console.Write ("Up \t");
-					tempPoint.y = (pos.y + 1) % (MAX_V+1);
-				} else { 				//moving down
-					Console.Write ("Down\t");
-					tempPoint.y = (pos.y==0)?MAX_V:(pos.y-1);
-				}
-			} else { 					//
-				if (RandomizeTwo ()==0) { 	//moving left
-					Console.Write ("Left\t");
-					tempPoint.x = (pos.x == 0) ? MAX_H : (pos.x - 1);
-				} else {				//moving right
-					Console.Write ("Right\t");
-					tempPoint.x = (pos.x + 1) % (MAX_H+1);
-				}
-			}
-			pos = tempPoint;
+            if ((dir & 1)==0)
+            {       //moving vertically
+                if ((dir & 2)==0)
+                {   //moving up
+                    Console.Write("Up \t");
+                    tempPoint.y = (pos.y + 1) % (MAX_V + 1);
+                }
+                else
+                {   //moving down
+                    Console.Write("Down\t");
+                    tempPoint.y = (pos.y == 0) ? MAX_V : (pos.y - 1);
+                }
+            }
+            else
+            {                   //
+                if ((dir & 2) == 0)
+                {   //moving left
+                    Console.Write("Left\t");
+                    tempPoint.x = (pos.x == 0) ? MAX_H : (pos.x - 1);
+                }
+                else
+                {               //moving right
+                    Console.Write("Right\t");
+                    tempPoint.x = (pos.x + 1) % (MAX_H + 1);
+                }
+            }
+            pos = tempPoint;
+            
 		}
 
-		private byte RandomizeTwo(){
-			byte b = (byte)rand.Next (2);
+
+		public byte RandomizeThree(){
+			byte b = (byte)rand.Next (3);
 			return b;
 		}
 
@@ -83,8 +98,16 @@ namespace web_client
             string server = SERVER;
             int port = PORT;
             RandomMover rm = new RandomMover ();
-           
-			CommunicatorJSON cJson = new CommunicatorJSON ();
+
+            Point p = new Point();
+            rm.id = 0;
+            p.x = 99;
+            p.y = 99;
+            rm.pos = p;
+
+            rm.MoveOnePos(2);
+
+            CommunicatorJSON cJson = new CommunicatorJSON ();
 
 			if (args.Length > 1) {
 				if (IsInteger (args [1])) {//we have only the port specified
@@ -113,7 +136,7 @@ namespace web_client
             }
             for (int i=0; i<500; i++) {
 				System.Threading.Thread.Sleep (500);
-				rm.MoveOnePos ();
+				rm.MoveOnePos (rm.RandomizeThree());
                 //Console.WriteLine (rm.ToString ());
                 try { 
 				    Console.WriteLine(cJson.SendRepresentation(ref rm));
