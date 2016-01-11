@@ -18,12 +18,20 @@ namespace web_client.Tests
             rm.id = 0;
             p.x = 99;
             p.y = 99;
+            rm.pos = p;
+            //0 = down
+            //2 = up
+            //1 = left
+            //3 = right
+            rm.MoveOnePos((byte)3);  
+            Assert.AreEqual(0,rm.pos.x);
+            rm.MoveOnePos((byte)0);
+            Assert.AreEqual(0, rm.pos.y);
 
-            //TODO create an interface to give the direction
-            //Implement the interface in a class that moves 
-            //in the desired direction. Test if 99 + 1 overflows to 0 
-            //and 0 - 1 goes to 99
-            rm.MoveOnePos();
+            rm.MoveOnePos((byte)1);
+            Assert.AreEqual(99, rm.pos.x);
+            rm.MoveOnePos((byte)2);
+            Assert.AreEqual(99, rm.pos.y);
         }
     }
 }
