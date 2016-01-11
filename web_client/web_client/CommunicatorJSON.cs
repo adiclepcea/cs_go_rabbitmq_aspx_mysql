@@ -8,10 +8,25 @@ namespace web_client
 	public class CommunicatorJSON : CommunicatorInterface
 	{
 		DataContractJsonSerializer dcjs;
+        CommChannelnterface cci;
+
+        //so that we can send this by http or whatever we decide later
+        //and we can also test with a mock channel
+        public void SetCommChannel(CommChannelnterface cci)
+        {
+            this.cci = cci;
+        }
+
 		public CommunicatorJSON ()
 		{
 			dcjs = new DataContractJsonSerializer (typeof(RandomMover));
+            SetCommChannel(new CommChannelHttp());            
 		}
+
+        public void SetServer(string server)
+        {
+            ((CommChannelHttp)this.cci).Server = server;
+        }
 
 		#region CommunicatorInterface implementation
 
@@ -27,42 +42,33 @@ namespace web_client
 			return rez;
 		}
 
-		public string SendRepresentation (ref RandomMover rm,string server)
+		public string SendRepresentation (ref RandomMover rm)
 		{
-			HttpWebRequest request = (HttpWebRequest)WebRequest.Create (server);
-			string representation = GetRepresentation (rm);
-			RandomMover rmTemp;
-			byte[] req = System.Text.UTF8Encoding.UTF8.GetBytes (representation);
-			//we setup the request header and then we send it
-			request.Method = "POST";
-			request.Accept = "application/json";
-			request.ContentType = "application/json; charset=utf-8";
-			request.ContentLength = req.Length;
-			request.GetRequestStream ().Write (req, 0, req.Length);
+            
+            string representation = GetRepresentation (rm);
+            RandomMover rmTemp;
+            
+            String response;
+            if ((response = cci.SendData(representation))==null) {
+                throw new Exception("No response from server!");                
+            }
+            Console.Out.WriteLine(response);
+            using (MemoryStream ms = new MemoryStream(System.Text.UTF8Encoding.UTF8.GetBytes(response)))
+            {
+                try
+                {
+                    object obj = dcjs.ReadObject(ms);
+                    rmTemp = (RandomMover)obj;
+                }
+                catch (System.Runtime.Serialization.SerializationException serEx) //not a valid json representation of RandomMover
+                {
+                    throw serEx;
+                }
+            }
+            rm.id = rmTemp.id;
+            rm.pos = rmTemp.pos;
 
-			//now see what goodies grandma sent us
-			using (var response = (HttpWebResponse)request.GetResponse ()) {
-
-				if (response.StatusCode != HttpStatusCode.OK) { //it means something bad happened, so we stop
-					return null;
-				}
-
-				using (var sr = response.GetResponseStream()) {                    
-					
-					try {
-                        object resp = dcjs.ReadObject(sr); 			//convert the response to object
-                        rmTemp = resp as RandomMover;			//this object should be a representation of RandomMover
-						rm.id = rmTemp.id;
-						rm.pos = rmTemp.pos;
-					} catch (InvalidCastException ex) {
-						return null;
-					}catch(System.Runtime.Serialization.SerializationException){
-                        return null;
-                    }
-				}
-			}
-
-			return rm.ToString();
+            return rm.ToString();
 		}
 
 		#endregion

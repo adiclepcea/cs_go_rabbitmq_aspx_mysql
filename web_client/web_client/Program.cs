@@ -14,8 +14,11 @@ namespace web_client
 	{
 		const byte MAX_H = 99; //100 cols: 0 .. 99
 		const byte MAX_V = 99; //100 rows: 0 .. 99
+        const string SERVER = "localhost";
+        const int PORT = 8080;
 
-		[DataMember(Name="id")]
+
+        [DataMember(Name="id")]
 		public UInt64 id { get; set;}
 
 		[DataMember(Name="point")]
@@ -28,7 +31,7 @@ namespace web_client
 		}
 
 		//move to another point
-	   private void MoveOnePos(){
+	   public void MoveOnePos(){
 			Point tempPoint = pos;
 			if (RandomizeTwo ()==0) { 		//moving vertically
 				if (RandomizeTwo ()==0) { 	//moving up
@@ -77,12 +80,11 @@ namespace web_client
 
 		public static void Main (string[] args)
 		{
-			RandomMover rm = new RandomMover ();
+            string server = SERVER;
+            int port = PORT;
+            RandomMover rm = new RandomMover ();
            
 			CommunicatorJSON cJson = new CommunicatorJSON ();
-
-			string server = "localhost";
-			int port = 8080;
 
 			if (args.Length > 1) {
 				if (IsInteger (args [1])) {//we have only the port specified
@@ -98,13 +100,28 @@ namespace web_client
 			}
 
 			string httpLoc = "http://" + server + ":" + port;
-			
-			Console.WriteLine(cJson.SendRepresentation(ref rm,httpLoc));
-			for (int i=0; i<500; i++) {
+
+            cJson.SetServer(httpLoc);
+
+            try
+            {
+                Console.WriteLine(cJson.SendRepresentation(ref rm));
+            }
+            catch (Exception ex)
+            {
+                Console.Out.WriteLine("[ERROR] - {0}", ex.Message);
+            }
+            for (int i=0; i<500; i++) {
 				System.Threading.Thread.Sleep (500);
 				rm.MoveOnePos ();
-				//Console.WriteLine (rm.ToString ());
-				Console.WriteLine(cJson.SendRepresentation(ref rm,httpLoc));
+                //Console.WriteLine (rm.ToString ());
+                try { 
+				    Console.WriteLine(cJson.SendRepresentation(ref rm));
+                }
+                catch (Exception ex)
+                {
+                    Console.Out.WriteLine("[ERROR] - {0}",ex.Message);
+                }
 			}
 		}
 	}
