@@ -1,8 +1,0 @@
-D:\div\go\hp\cs_go_rabbitmq_aspx_mysql\web_client\web_clientTests\bin\Debug\web_clientTests.dll
-D:\div\go\hp\cs_go_rabbitmq_aspx_mysql\web_client\web_clientTests\bin\Debug\web_clientTests.pdb
-D:\div\go\hp\cs_go_rabbitmq_aspx_mysql\web_client\web_clientTests\bin\Debug\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll
-D:\div\go\hp\cs_go_rabbitmq_aspx_mysql\web_client\web_clientTests\bin\Debug\web_client.exe
-D:\div\go\hp\cs_go_rabbitmq_aspx_mysql\web_client\web_clientTests\bin\Debug\web_client.pdb
-D:\div\go\hp\cs_go_rabbitmq_aspx_mysql\web_client\web_clientTests\obj\Debug\web_clientTests.csprojResolveAssemblyReference.cache
-D:\div\go\hp\cs_go_rabbitmq_aspx_mysql\web_client\web_clientTests\obj\Debug\web_clientTests.dll
-D:\div\go\hp\cs_go_rabbitmq_aspx_mysql\web_client\web_clientTests\obj\Debug\web_clientTests.pdb
