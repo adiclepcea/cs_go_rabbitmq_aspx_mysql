@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"net/http"
 	"sync/atomic"
+	"time"
 
 	"github.com/streadway/amqp"
 )
@@ -105,11 +106,6 @@ func checkAgent(agent *AgentReq) {
 	}
 
 	//check if position is free, change it if not
-	checkAgentPos(agent)
-}
-
-func checkAgentPos(agent *AgentReq) {
-	rand.Seed(100)
 	arr, ok := <-AChan
 
 	if !ok {
@@ -118,6 +114,18 @@ func checkAgentPos(agent *AgentReq) {
 		agent.P.Y = -1
 		return
 	}
+	CheckAgentPos(agent,&arr)
+	
+	A = arr
+
+	AChan <- A
+	
+	
+}
+
+func CheckAgentPos(agent *AgentReq,arr *[100][100]uint32 ) {
+	rand.Seed(time.Now().UTC().UnixNano())
+	
 
 	bEmptyFound := false
 	bAgentFound := false
@@ -170,9 +178,7 @@ func checkAgentPos(agent *AgentReq) {
 
 	log.Printf("%d,%d(%d)\r\n ", agent.P.X, agent.P.Y, agent.Id)
 
-	A = arr
-
-	AChan <- A
+	
 }
 
 //http server function
@@ -197,3 +203,4 @@ func managerFunc(w http.ResponseWriter, req *http.Request) {
 		publishRabbit("text/plain", jsonMsg) //send the message to RabbitMQ
 	}
 }
+

@@ -18,3 +18,5 @@ D:\div\go\hp\cs_go_rabbitmq_aspx_mysql\web_client\AspxClient\AspxClient\bin\Micr
 D:\div\go\hp\cs_go_rabbitmq_aspx_mysql\web_client\AspxClient\AspxClient\obj\Debug\AspxClient.csprojResolveAssemblyReference.cache
 D:\div\go\hp\cs_go_rabbitmq_aspx_mysql\web_client\AspxClient\AspxClient\obj\Debug\AspxClient.dll
 D:\div\go\hp\cs_go_rabbitmq_aspx_mysql\web_client\AspxClient\AspxClient\obj\Debug\AspxClient.pdb
+D:\div\go\hp\cs_go_rabbitmq_aspx_mysql\web_client\AspxClient\AspxClient\bin\MySql.Data.dll
+D:\div\go\hp\cs_go_rabbitmq_aspx_mysql\web_client\AspxClient\AspxClient\bin\RabbitMQ.Client.xml
